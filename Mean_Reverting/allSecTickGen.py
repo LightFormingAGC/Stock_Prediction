@@ -28,46 +28,7 @@ def get_tickers():
     if dates == '':
         dates = (pd.Timestamp.today() - pd.Timedelta(days=1)
                  ).strftime('%Y-%m-%d')  # yesterday
-    # headers = {
-    #     'authority': 'api.nasdaq.com',
-    #     'accept': 'application/json, text/plain, */*',
-    #     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-    #     'origin': 'https://www.nasdaq.com',
-    #     'sec-fetch-site': 'same-site',
-    #     'sec-fetch-mode': 'cors',
-    #     'sec-fetch-dest': 'empty',
-    #     'referer': 'https://www.nasdaq.com/',
-    #     'accept-language': 'en-US,en;q=0.9',
-    # }
 
-    # params = (
-    #     ('tableonly', 'true'),
-    #     ('limit', '25'),
-    #     ('offset', '0'),
-    #     ('download', 'true'),
-    # )
-
-    # r = requests.get('https://api.nasdaq.com/api/screener/stocks',
-    #                  headers=headers, params=params)
-
-    # data = r.json()['data']
-    # df = pd.DataFrame(data['rows'], columns=data['headers'])
-    # df = df[df['marketCap'].str.len() > 5]
-    # df['marketCap'] = df['marketCap'].astype(float)
-    # df = df[df['marketCap'] > 1000000000]
-    # df.volume = df.volume.astype(int)
-    # df = df[df.volume > 4000000]
-
-    # # filter stocks with last sale price > 5
-    # # get rid the $ sign
-    # df['lastsale'] = df['lastsale'].str.replace('$', '', regex=False)
-    # df['lastsale'] = df['lastsale'].astype(float)
-    # df = df[df['lastsale'] > 5]
-
-    # # group by sector and aggregate all symbol into a list
-    # df = df.groupby('sector').agg({'symbol': lambda x: list(x)})
-    # df = df[df.symbol.str.len() > 5]
-    # # for each sector, geenrator all possible pairs using itertools.combinations
     # df = df.reset_index()
     client = RESTClient(polygonAPIkey)
     mktData = pd.DataFrame(client.get_grouped_daily_aggs(
