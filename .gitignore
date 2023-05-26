@@ -1,2 +1,4 @@
 .idea/
 venv/
+datas.pkl
+log_rt_backtest.pkl
