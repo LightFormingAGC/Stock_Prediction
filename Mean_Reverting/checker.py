@@ -46,7 +46,7 @@ for i in np.arange(0.005, 0.1, 0.005):
         log_rts[(i, waiting)] = []
 
 
-def coint_gen(dates, wait):
+def coint_gen(dates):
 
     # checking conditions
     pairs = pd.read_csv('cointegrated_pairs.csv', index_col=False)
@@ -61,7 +61,7 @@ def coint_gen(dates, wait):
 
         info = data[pair].loc[:dates]
 
-        if len(info) < wait:
+        if len(info) < 260 * 5:
             continue
 
         if info.index[0] > pd.to_datetime(dates):
@@ -88,7 +88,7 @@ def coint_gen(dates, wait):
     return coint_pairs
 
 
-def PnL(coint_pairs, dates, log_rts, waiting):
+def PnL(coint_pairs, dates, log_rts):
 
     with open('datas.pkl', 'rb') as f:
         data = pickle.load(f)
@@ -101,9 +101,12 @@ def PnL(coint_pairs, dates, log_rts, waiting):
         tick1prices = tick1['Adj Close']
         tick2prices = tick2['Adj Close']
 
+        df = pd.concat([tick1prices, tick2prices], axis=1)
+        df.columns = [cp[0], cp[1]]
+        df = df.dropna()
+
         try:
-            stats = statsGen(
-                pd.concat([tick1prices, tick2prices], axis=1))
+            stats = statsGen(df)
         except:
             continue
 
@@ -115,7 +118,14 @@ def PnL(coint_pairs, dates, log_rts, waiting):
         else:
             continue
 
-        portfolio = np.array(coef1 * tick1prices + coef2 * tick2prices)
+        portfolio = df[cp[0]] * coef1 + df[cp[1]] * coef2
+
+        passed = []
+        for wait in np.arange(260*5, 260 * 15, 260):
+            if len(portfolio) > wait:
+                passed.append(wait)
+        if len(passed) == 0:
+            continue
 
         # 负数问题
 
@@ -132,11 +142,11 @@ def PnL(coint_pairs, dates, log_rts, waiting):
             else:
                 signal = 0
 
-            dates_idx_1 = tick1.index.get_loc(dates)
-            dates_idx_2 = tick2.index.get_loc(dates)
+            dates_idx1 = data[cp[0]].index.get_loc(dates)
+            dates_idx2 = data[cp[1]].index.get_loc(dates)
 
-            tick1_tmr = data[cp[0]].iloc[dates_idx_1 + 1, :]
-            tick2_tmr = data[cp[1]].iloc[dates_idx_2 + 1, :]
+            tick1_tmr = data[cp[0]].iloc[dates_idx1 + 1]
+            tick2_tmr = data[cp[1]].iloc[dates_idx2 + 1]
 
             # 0.95 for transaction cost, spread, failed order etc
             if signal == 1:
@@ -155,8 +165,9 @@ def PnL(coint_pairs, dates, log_rts, waiting):
                     cost += tick2prices[-1] * coef2
                     gains += tick2_tmr['Adj Close'] * coef2
 
-                log_rts[(thresh, waiting)].append(
-                    math.log(gains * 0.99 / cost))
+                for waiting in passed:
+                    log_rts[(thresh, waiting)].append(
+                        math.log(gains * 0.99 / cost))
 
             elif signal == -1:
                 cost = 0
@@ -174,8 +185,9 @@ def PnL(coint_pairs, dates, log_rts, waiting):
                     cost += tick2_tmr['Adj Close'] * coef2
                     gains += tick2prices[-1] * coef2
 
-                log_rts[(thresh, waiting)].append(
-                    math.log(gains * 0.99 / cost))
+                for waiting in passed:
+                    log_rts[(thresh, waiting)].append(
+                        math.log(gains * 0.99 / cost))
 
         # save log_rt
     with open('log_rt_backtest.pkl', 'wb') as f:
@@ -200,7 +212,4 @@ trading_days = nyse.valid_days(
 trading_days = pd.to_datetime(trading_days).strftime('%Y-%m-%d')
 
 for day in tqdm(trading_days):
-    for param in log_rts.keys():
-        thresh = param[0]
-        waiting = param[1]
-        log_rts = PnL(coint_gen(day, waiting), day, log_rts, waiting)
+    log_rts = PnL(coint_gen(day), day, log_rts)
