@@ -1,4 +1,7 @@
 .idea/
 venv/
 datas.pkl
-log_rt_backtest.pkl
+log_rt_backtest_4_16.pkl
+log_rt_backtest_8_16.pkl
+log_rt_backtest_12_16.pkl
+

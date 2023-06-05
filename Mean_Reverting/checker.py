@@ -39,9 +39,9 @@ def statsGen(data):
 
 
 # lim t choose: 5 years to 15 years
-# threshold: 80 pct to 99 pct, increment: 1 pct
+# threshold: 95 pct to 99 pct, increment: 1 pct
 log_rts = {}
-for i in np.arange(0.005, 0.1, 0.005):
+for i in np.arange(0.005, 0.025, 0.005):
     for waiting in np.arange(260 * 5, 260 * 15, 260):
         log_rts[(i, waiting)] = []
 
@@ -121,7 +121,7 @@ def PnL(coint_pairs, dates, log_rts):
         portfolio = df[cp[0]] * coef1 + df[cp[1]] * coef2
 
         passed = []
-        for wait in np.arange(260*5, 260 * 15, 260):
+        for wait in np.arange(260*5, 260 * 10, 260):
             if len(portfolio) > wait:
                 passed.append(wait)
         if len(passed) == 0:
@@ -190,18 +190,18 @@ def PnL(coint_pairs, dates, log_rts):
                         math.log(gains * 0.99 / cost))
 
         # save log_rt
-    with open('log_rt_backtest.pkl', 'wb') as f:
+    with open('log_rt_backtest_8_16.pkl', 'wb') as f:
         pickle.dump(log_rts, f)
 
     return log_rts
 
 
 # backtest end date must be one day before today
-end = '2023-05-24'
+end = (pd.Timestamp.today() - pd.Timedelta(days=1)).strftime('%Y-%m-%d')
 # start is two yerars before today
-out_sample_start = pd.to_datetime(end) - pd.DateOffset(years=4)
+out_sample_start = pd.to_datetime(end) - pd.DateOffset(years=8)
 out_sample_start = out_sample_start.strftime('%Y-%m-%d')
-in_sample_start = pd.to_datetime(end) - pd.DateOffset(years=20)
+in_sample_start = pd.to_datetime(end) - pd.DateOffset(years=10, month=8)
 in_sample_start = in_sample_start.strftime('%Y-%m-%d')
 
 
