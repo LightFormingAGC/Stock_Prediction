@@ -10,9 +10,13 @@ yf.pdr_override()
 # Source: https://www.quantstart.com/articles/Basics-of-Statistical-Mean-Reversion-Testing/
 
 # temp sol
+
+
+# Maybe it won't deviate from GBM that much?
+
 ticker = input("Enter the ticker: ")
 data = pd.DataFrame()
-data['Close'] = wb.get_data_yahoo(ticker, start='2017-1-1')['Close']
+data['Close'] = wb.get_data_yahoo(ticker)['Adj Close']
 
 
 def hurst(ts):
@@ -40,7 +44,7 @@ def hurst(ts):
 
     # plot out the different lags
     plt.plot(log(lags), log(tau), 'o')
-    
+
     # Return the Hurst exponent from the polyfit output
     return poly[0]*2.0
 

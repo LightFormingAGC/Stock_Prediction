@@ -21,7 +21,7 @@ yf.pdr_override()
 
 def get_tickers():
     dates = input(
-        'Enter a backtest date in the format of YYYY-MM-DD: \n otherwise empty is yesterday')
+        'Enter a backtest date in the format of YYYY-MM-DD, \n otherwise empty is yesterday: ')
 
     # if dates == '':
     # previous trading day
@@ -45,9 +45,11 @@ def tickers_generator(mktData):
         try:
             data = pdr.get_data_yahoo(ticker)[
                 ['Adj Close', 'Volume']]
+            data = data.resample('M').last()
 
-            if len(data) < 1500:
+            if len(data) < 60:
                 continue
+
         except:
             continue
 
@@ -70,9 +72,14 @@ if __name__ == '__main__':
 
     df, data = tickers_generator(all_ticks)
     # results is set, combine them into one set
-    df.to_csv('cointegrated_pairs.csv', index=False)
-    with open('datas.pkl', 'wb') as f:
+
+    # store tickers list
+    df.to_csv('tickers.csv', index=False)
+
+    # store adj prices and volumns with dates for each ticker
+    with open('prices.pkl', 'wb') as f:
         pickle.dump(data, f)
+
     # results = pd.concat(results)
     # results.to_csv('cointegrated_pairs.csv', index=False)
     print("--- %s seconds ---" % (time.time() - start_time))
